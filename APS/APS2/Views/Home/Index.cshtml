@@ -1,0 +1,111 @@
+@section Tittle{
+    <section class="Tittle">
+        <div class="site-title"><b>Chat</b></div>
+    </section>
+}
+
+@section featured {
+    <section class="featured">
+        <div class="side">
+        </div>
+
+        <div class="content-wrapper">
+            <div class="line" />
+            <div id="contentMessage">
+                <ul id="message">
+                </ul>
+            </div>
+            <div class="line" />
+        </div>
+    </section>
+    
+}
+
+<input type="hidden" id="displayname"/>
+
+<div class="textInput">
+    <div class="area">
+        <textarea id="inputArea" rows="3"  contenteditable="false"></textarea>
+    </div>
+    <div class="command">
+        <input type="button" value="Enviar" id="Send"/>
+        <input type="button" value="Limpar" id="Clear"/>
+    </div>
+</div>
+
+
+<script src="/Scripts/jquery-1.6.4.min.js" type="text/javascript"></script>
+<script src="/Scripts/jquery.signalR-1.0.1.js" type="text/javascript"></script>
+<script src="signalr/hubs" type="text/javascript"></script>
+
+<script type="text/javascript">
+    $(function () {
+        var chat = $.connection.chat;
+        chat.client.SendMessage = function (name, message) {
+            var encodedName = $('<div />').text(name).html();
+            var encodedMsg = $('<div />').text(message).html();
+
+
+            $('#message').append('<li><em>' + getFormatedDate() + '</em> <i><b>' + encodedName + '</i></b>:<div />'
+                + '<div id="text">' + encodedMsg + '</div></li><div />'
+                + '<hr>');
+
+            divRoll();
+        };
+
+        $('#displayname').val(prompt('Coloque seu nome:', ''));
+
+        $('#inputArea').focus();
+
+        $.connection.hub.start().done(function () {
+            $('#Send').click(function () {
+                var msg = $('#inputArea').val().trim();
+                if (msg != null && msg != '') {
+                    chat.server.send($('#displayname').val(), msg);
+                    $('#inputArea').val('').focus();
+                }
+            });
+
+            $('#Clear').click(function () {
+                $('#inputArea').val('').focus();
+            });
+
+            $('#inputArea').keypress(function (e) {
+                var tecla = (e.keyCode ? e.keyCode : e.which);
+
+                if (tecla == 10)
+                    $('#inputArea').val($('#inputArea').val() + '\n');
+
+                if (tecla == 13) {
+                    $('#Send').click();
+                    return false;
+                }
+
+                return true;
+            });
+
+        });
+
+        function divRoll() {
+            var divElement = document.getElementById('contentMessage');
+            divElement.scrollTop = divElement.scrollHeight;
+        }
+
+        function getFormatedDate() {
+            var dateToBeFormated = new Date();
+            var formatedDate = '';
+
+            formatedDate += dateToBeFormated.getHours().toString().length < 2 ?
+                '0' + dateToBeFormated.getHours().toString() :
+                dateToBeFormated.getHours().toString();
+
+            formatedDate += ':';
+
+            formatedDate += dateToBeFormated.getMinutes().toString().length < 2 ?
+                '0' + dateToBeFormated.getMinutes().toString() :
+                dateToBeFormated.getMinutes().toString();
+
+            return formatedDate;
+        }
+    });
+    </script>
